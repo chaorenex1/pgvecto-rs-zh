@@ -23,4 +23,4 @@ services:
       timeout: 5s
       retries: 5
     command: >
-      postgres -c shared_preload_libraries=pg_jieba.so,vectors.so,age.so -c search_path=ag_catalog,"$${user}",public
+      postgres -c shared_preload_libraries=pg_jieba.so,vectors.so,age.so -c search_path=public,"$${user}",ag_catalog,vectors
