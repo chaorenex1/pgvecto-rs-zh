@@ -7,6 +7,7 @@ export POSTGRES_USER=${POSTGRES_USER:-postgres}
 export POSTGRES_DB=${POSTGRES_DB:-$POSTGRES_USER}
 export POSTGRES_CONFIG_FILE=${POSTGRES_CONFIG_FILE:-/etc/postgresql/postgresql.conf}
 export POSTGRES_FALLBACK_CONFIG_FILE=${POSTGRES_FALLBACK_CONFIG_FILE:-/etc/postgresql/postgresql.conf}
+export POSTGRES_IO_METHOD=${POSTGRES_IO_METHOD:-}
 
 warn_permission_issue() {
   echo "warning: $*" >&2
@@ -45,6 +46,17 @@ prepare_pgdata_dir() {
     exit 1
   fi
   rm -f "$probe_file"
+}
+
+build_postgres_runtime_options() {
+  local config_file=$1
+  local options=("-c" "config_file=$config_file")
+
+  if [[ -n "$POSTGRES_IO_METHOD" ]]; then
+    options+=("-c" "io_method=$POSTGRES_IO_METHOD")
+  fi
+
+  printf '%s\n' "${options[@]}"
 }
 
 run_init_scripts() {
@@ -91,6 +103,7 @@ fi
 prepare_pgdata_dir
 
 ACTIVE_POSTGRES_CONFIG_FILE=$(resolve_postgres_config_file)
+mapfile -t POSTGRES_RUNTIME_OPTIONS < <(build_postgres_runtime_options "$ACTIVE_POSTGRES_CONFIG_FILE")
 
 if [[ ! -s "$PGDATA/PG_VERSION" ]]; then
   if [[ -z "${POSTGRES_PASSWORD:-}" ]]; then
@@ -105,7 +118,7 @@ if [[ ! -s "$PGDATA/PG_VERSION" ]]; then
   initdb --username=postgres --pwfile="$tmp_pw" --auth-local=trust --auth-host=scram-sha-256 ${POSTGRES_INITDB_ARGS:-} -D "$PGDATA"
   echo "host all all all scram-sha-256" >> "$PGDATA/pg_hba.conf"
 
-  pg_ctl -D "$PGDATA" -o "-c listen_addresses='' -c config_file=$ACTIVE_POSTGRES_CONFIG_FILE" -w start
+  pg_ctl -D "$PGDATA" -o "-c listen_addresses='' ${POSTGRES_RUNTIME_OPTIONS[*]}" -w start
 
   if [[ "$POSTGRES_USER" != postgres ]]; then
     psql \
@@ -162,4 +175,4 @@ SQL
   pg_ctl -D "$PGDATA" -m fast -w stop
 fi
 
-exec postgres -D "$PGDATA" -c config_file="$ACTIVE_POSTGRES_CONFIG_FILE"
+exec postgres -D "$PGDATA" "${POSTGRES_RUNTIME_OPTIONS[@]}"

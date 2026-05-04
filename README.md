@@ -54,6 +54,8 @@ initialized under `pgdata/` in the same directory so the compose file and
 custom config can coexist without making `PGDATA` non-empty.
 The container checks `/runtime/postgresql.conf` first, which comes from the
 directory where `docker compose` is executed.
+`POSTGRES_IO_METHOD` is controlled through compose environment variables and
+defaults to `worker`.
 For example:
 
 ```text

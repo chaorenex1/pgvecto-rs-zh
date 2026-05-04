@@ -1,3 +1,4 @@
+.env
 pg_data/
 sources/*
 !sources/.gitkeep

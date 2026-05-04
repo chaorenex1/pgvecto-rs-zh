@@ -8,6 +8,7 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
       POSTGRES_DB: ${POSTGRES_DB:-postgres}
       POSTGRES_INITDB_ARGS: --data-checksums
+      POSTGRES_IO_METHOD: ${POSTGRES_IO_METHOD:-worker}
       POSTGRES_CONFIG_FILE: /runtime/postgresql.conf
       POSTGRES_FALLBACK_CONFIG_FILE: /etc/postgresql/postgresql.conf
       AGENSGRAPH_GRAPH_PATH: /runtime/agensgraph
