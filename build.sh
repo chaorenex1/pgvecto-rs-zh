@@ -61,13 +61,13 @@ if [[ "$ACTION" == "fetch" || "$ACTION" == "all" ]]; then
 fi
 
 if [[ "$ACTION" == "build" || "$ACTION" == "all" ]]; then
-  log "Building image pgvecto-rs-zh:pg${PG_MAJOR}"
+  log "Building image pg-minir:pg${PG_MAJOR}"
 
   build_args=(
     --build-arg "PG_MAJOR=${PG_MAJOR}"
     --build-arg "PG_VERSION=${PG_VERSION}"
-    -t "pgvecto-rs-zh:pg${PG_MAJOR}"
-    -t "pgvecto-rs-zh:latest"
+    -t "pg-minir:pg${PG_MAJOR}"
+    -t "pg-minir:latest"
   )
 
   if [[ "$NO_CACHE" -eq 1 ]]; then
