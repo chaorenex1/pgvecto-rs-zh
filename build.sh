@@ -30,13 +30,13 @@ Usage: bash build.sh [fetch|build|all|clean] [--no-cache]
   fetch     Download PostgreSQL source and clone all extension sources.
   build     Build the Docker image from local sources/.
   all       Fetch sources and then build (default).
-  clean     Remove local pgvecto-rs-zh images for the selected PG major.
+  clean     Remove local minir-pg images for the selected PG major.
 EOF
 }
 
 ACTION=all
 NO_CACHE=0
-IMAGE_NAME=pgvecto-rs-zh
+IMAGE_NAME=minir-pg
 for arg in "$@"; do
   case "$arg" in
     fetch|build|all|clean)

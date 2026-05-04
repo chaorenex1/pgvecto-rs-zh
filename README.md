@@ -1,4 +1,4 @@
-# pgvecto-rs-zh
+# minir-pg
 
 This project builds a PostgreSQL 18 image from an `ubuntu:24.04` base, compiles PostgreSQL with `--with-lz4` and `--with-liburing`, and then installs the full extension stack from source where practical.
 
@@ -44,6 +44,18 @@ Start the database:
 
 ```bash
 docker compose up -d --build
+```
+
+Run the command from the repository root. The repository root must contain a
+`postgresql.conf` file. PostgreSQL data will be initialized under `pgdata/` in
+the same directory so the compose file and custom config can coexist without
+making `PGDATA` non-empty.
+For example:
+
+```text
+<runtime-dir>/
+  postgresql.conf
+  pgdata/
 ```
 
 ## Validation

@@ -1,24 +1,28 @@
-version: "3.9"
-
 services:
   postgres:
-    build:
-      context: .
-      dockerfile: Dockerfile
-      args:
-        PG_MAJOR: 18
-        PG_VERSION: 18.3
-    image: pgvecto-rs-zh:latest
+    container_name: ${CONTAINER_NAME:-minir-pg}
+    image: ${POSTGRES_IMAGE:-minir-pg:latest}
     restart: unless-stopped
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: postgres
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: ${POSTGRES_DB:-postgres}
       POSTGRES_INITDB_ARGS: --data-checksums
+      POSTGRES_CONFIG_FILE: /etc/postgresql/postgresql.conf
+      AGENSGRAPH_GRAPH_PATH: /runtime/agensgraph
+      # Keep PGDATA in a child directory so the host runtime directory can also
+      # hold the compose file and the custom postgresql.conf without breaking initdb.
+      PGDATA: /runtime/pgdata
     ports:
-      - "5432:5432"
+      - "${HOST_PORT:-5432}:5432"
     volumes:
-      - ./pg_data:/var/lib/postgresql/data
+      - type: bind
+        source: .
+        target: /runtime
+      - type: bind
+        source: ./postgresql.conf
+        target: /etc/postgresql/postgresql.conf
+        read_only: true
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
       interval: 10s

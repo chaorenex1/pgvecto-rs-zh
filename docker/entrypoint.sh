@@ -5,6 +5,7 @@ export PATH=/usr/local/pgsql/bin:$PATH
 export PGDATA=${PGDATA:-/var/lib/postgresql/data}
 export POSTGRES_USER=${POSTGRES_USER:-postgres}
 export POSTGRES_DB=${POSTGRES_DB:-$POSTGRES_USER}
+export POSTGRES_CONFIG_FILE=${POSTGRES_CONFIG_FILE:-/etc/postgresql/postgresql.conf}
 
 run_init_scripts() {
   local file
@@ -47,6 +48,11 @@ fi
 mkdir -p "$PGDATA"
 chmod 700 "$PGDATA"
 
+if [[ ! -f "$POSTGRES_CONFIG_FILE" ]]; then
+  echo "postgres config file not found: $POSTGRES_CONFIG_FILE"
+  exit 1
+fi
+
 if [[ ! -s "$PGDATA/PG_VERSION" ]]; then
   if [[ -z "${POSTGRES_PASSWORD:-}" ]]; then
     echo "POSTGRES_PASSWORD must be set for first-time initialization"
@@ -58,10 +64,9 @@ if [[ ! -s "$PGDATA/PG_VERSION" ]]; then
   printf '%s\n' "$POSTGRES_PASSWORD" > "$tmp_pw"
 
   initdb --username=postgres --pwfile="$tmp_pw" --auth-local=trust --auth-host=scram-sha-256 ${POSTGRES_INITDB_ARGS:-} -D "$PGDATA"
-  cp /etc/postgresql/postgresql.conf "$PGDATA/postgresql.conf"
   echo "host all all all scram-sha-256" >> "$PGDATA/pg_hba.conf"
 
-  pg_ctl -D "$PGDATA" -o "-c listen_addresses='' -c config_file=$PGDATA/postgresql.conf" -w start
+  pg_ctl -D "$PGDATA" -o "-c listen_addresses='' -c config_file=$POSTGRES_CONFIG_FILE" -w start
 
   if [[ "$POSTGRES_USER" != postgres ]]; then
     psql \
@@ -118,4 +123,4 @@ SQL
   pg_ctl -D "$PGDATA" -m fast -w stop
 fi
 
-exec postgres -D "$PGDATA" -c config_file="$PGDATA/postgresql.conf"
+exec postgres -D "$PGDATA" -c config_file="$POSTGRES_CONFIG_FILE"
