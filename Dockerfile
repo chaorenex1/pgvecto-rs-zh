@@ -1,16 +1,14 @@
-# syntax=docker/dockerfile:1.7
-
 ARG UBUNTU_VERSION=24.04
 ARG PG_MAJOR=18
 ARG PG_VERSION=18.3
-
-SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
 FROM ubuntu:${UBUNTU_VERSION} AS pg-builder
 ARG DEBIAN_FRONTEND=noninteractive
 ARG PG_MAJOR
 ARG PG_VERSION
-ENV LANG=en_US.UTF-8     LC_ALL=en_US.UTF-8
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
+ENV LANG=en_US.UTF-8 \
+    LC_ALL=en_US.UTF-8
 
 RUN packages=(
       bison
@@ -32,20 +30,32 @@ RUN packages=(
       wget
       xz-utils
       zlib1g-dev
-    )     && apt-get update     && apt-get install -y --no-install-recommends "${packages[@]}"     && locale-gen en_US.UTF-8     && rm -rf /var/lib/apt/lists/*
+    ) \
+    && apt-get update \
+    && apt-get install -y --no-install-recommends "${packages[@]}" \
+    && locale-gen en_US.UTF-8 \
+    && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /workspace
 COPY docker/versions.env docker/versions.env
 COPY docker/build-scripts/build-postgresql.sh docker/build-scripts/build-postgresql.sh
 COPY docker/build-scripts/common.sh docker/build-scripts/common.sh
 COPY sources/ sources/
-RUN chmod +x docker/build-scripts/build-postgresql.sh docker/build-scripts/common.sh     && set -a     && . docker/versions.env     && set +a     && docker/build-scripts/build-postgresql.sh /workspace/sources
+RUN chmod +x docker/build-scripts/build-postgresql.sh docker/build-scripts/common.sh \
+    && set -a \
+    && . docker/versions.env \
+    && set +a \
+    && docker/build-scripts/build-postgresql.sh /workspace/sources
 
 FROM ubuntu:${UBUNTU_VERSION} AS ext-builder
 ARG DEBIAN_FRONTEND=noninteractive
 ARG PG_MAJOR
 ARG PG_VERSION
-ENV LANG=en_US.UTF-8     LC_ALL=en_US.UTF-8     PATH=/root/.cargo/bin:/usr/local/pgsql/bin:$PATH     PG_CONFIG=/usr/local/pgsql/bin/pg_config
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
+ENV LANG=en_US.UTF-8 \
+    LC_ALL=en_US.UTF-8 \
+    PATH=/root/.cargo/bin:/usr/local/pgsql/bin:$PATH \
+    PG_CONFIG=/usr/local/pgsql/bin/pg_config
 
 RUN packages=(
       bison
@@ -86,21 +96,38 @@ RUN packages=(
       unzip
       wget
       zlib1g-dev
-    )     && apt-get update     && apt-get install -y --no-install-recommends "${packages[@]}"     && locale-gen en_US.UTF-8     && rm -rf /var/lib/apt/lists/*
+    ) \
+    && apt-get update \
+    && apt-get install -y --no-install-recommends "${packages[@]}" \
+    && locale-gen en_US.UTF-8 \
+    && rm -rf /var/lib/apt/lists/*
 
-RUN curl --fail --location --silent --show-error https://sh.rustup.rs       | sh -s -- -y --profile minimal --default-toolchain stable
+RUN curl --fail --location --silent --show-error https://sh.rustup.rs \
+      | sh -s -- -y --profile minimal --default-toolchain stable
 
 COPY --from=pg-builder /usr/local/pgsql /usr/local/pgsql
 WORKDIR /workspace
 COPY docker/versions.env docker/versions.env
 COPY docker/build-scripts/ docker/build-scripts/
 COPY sources/ sources/
-RUN chmod +x docker/build-scripts/*.sh     && set -a     && . docker/versions.env     && set +a     && docker/build-scripts/build-core-extensions.sh /workspace/sources     && docker/build-scripts/build-heavy-extensions.sh /workspace/sources     && docker/build-scripts/build-vector-stack.sh /workspace/sources
+RUN chmod +x docker/build-scripts/*.sh \
+    && set -a \
+    && . docker/versions.env \
+    && set +a \
+    && docker/build-scripts/build-core-extensions.sh /workspace/sources \
+    && docker/build-scripts/build-heavy-extensions.sh /workspace/sources \
+    && docker/build-scripts/build-vector-stack.sh /workspace/sources
 
 FROM ubuntu:${UBUNTU_VERSION} AS runtime
 ARG DEBIAN_FRONTEND=noninteractive
 ARG PG_MAJOR
-ENV LANG=en_US.UTF-8     LC_ALL=en_US.UTF-8     PATH=/usr/local/pgsql/bin:$PATH     PGDATA=/var/lib/postgresql/data     POSTGRES_USER=postgres     POSTGRES_DB=postgres
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
+ENV LANG=en_US.UTF-8 \
+    LC_ALL=en_US.UTF-8 \
+    PATH=/usr/local/pgsql/bin:$PATH \
+    PGDATA=/var/lib/postgresql/data \
+    POSTGRES_USER=postgres \
+    POSTGRES_DB=postgres
 
 RUN packages=(
       ca-certificates
@@ -131,7 +158,11 @@ RUN packages=(
       tini
       tzdata
       zlib1g-dev
-    )     && apt-get update     && apt-get install -y --no-install-recommends "${packages[@]}"     && locale-gen en_US.UTF-8     && rm -rf /var/lib/apt/lists/*
+    ) \
+    && apt-get update \
+    && apt-get install -y --no-install-recommends "${packages[@]}" \
+    && locale-gen en_US.UTF-8 \
+    && rm -rf /var/lib/apt/lists/*
 
 COPY --from=ext-builder /usr/local/pgsql /usr/local/pgsql
 COPY docker/entrypoint.sh /usr/local/bin/docker-entrypoint.sh
@@ -140,7 +171,12 @@ COPY docker/initdb/ /docker-entrypoint-initdb.d/
 COPY docker/sysctl/99-postgres.conf /etc/sysctl.d/99-postgres.conf
 COPY docker/security/limits.d/postgres.conf /etc/security/limits.d/postgres.conf
 
-RUN chmod +x /usr/local/bin/docker-entrypoint.sh     && groupadd --system postgres     && useradd --system --gid postgres --home-dir /var/lib/postgresql --shell /bin/bash postgres     && mkdir -p /var/lib/postgresql/data /var/run/postgresql     && chown -R postgres:postgres /var/lib/postgresql /var/run/postgresql     && chmod 2775 /var/run/postgresql
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh \
+    && groupadd --system postgres \
+    && useradd --system --gid postgres --home-dir /var/lib/postgresql --shell /bin/bash postgres \
+    && mkdir -p /var/lib/postgresql/data /var/run/postgresql \
+    && chown -R postgres:postgres /var/lib/postgresql /var/run/postgresql \
+    && chmod 2775 /var/run/postgresql
 
 VOLUME ["/var/lib/postgresql/data"]
 EXPOSE 5432
