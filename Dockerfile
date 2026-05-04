@@ -1,17 +1,26 @@
 ARG UBUNTU_VERSION=24.04
 ARG PG_MAJOR=18
 ARG PG_VERSION=18.3
+ARG TZ=Asia/Shanghai
 
-FROM ubuntu:${UBUNTU_VERSION} AS pg-builder
+FROM ubuntu:${UBUNTU_VERSION} AS apt-base
 ARG DEBIAN_FRONTEND=noninteractive
-ARG PG_MAJOR
-ARG PG_VERSION
+ARG TZ
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 ENV LANG=en_US.UTF-8 \
     LC_ALL=en_US.UTF-8 \
-    PG_PREFIX=/usr/local/pgsql18
+    PG_PREFIX=/usr/local/pgsql18 \
+    TZ=${TZ}
 
-RUN apt-get update \
+COPY docker/build-scripts/configure-apt-mirrors.sh /usr/local/bin/configure-apt-mirrors.sh
+
+FROM apt-base AS pg-builder
+ARG PG_MAJOR
+ARG PG_VERSION
+
+RUN chmod +x /usr/local/bin/configure-apt-mirrors.sh \
+    && /usr/local/bin/configure-apt-mirrors.sh \
+    && apt-get update \
     && apt-get install -y --no-install-recommends \
         bison \
         build-essential \
@@ -50,18 +59,15 @@ RUN chmod +x docker/build-scripts/build-postgresql.sh docker/build-scripts/commo
     && set +a \
     && docker/build-scripts/build-postgresql.sh /workspace/sources
 
-FROM ubuntu:${UBUNTU_VERSION} AS ext-builder
-ARG DEBIAN_FRONTEND=noninteractive
+FROM apt-base AS ext-builder
 ARG PG_MAJOR
 ARG PG_VERSION
-SHELL ["/bin/bash", "-o", "pipefail", "-c"]
-ENV LANG=en_US.UTF-8 \
-    LC_ALL=en_US.UTF-8 \
-    PG_PREFIX=/usr/local/pgsql18 \
-    PATH=/root/.cargo/bin:/usr/local/pgsql18/bin:$PATH \
+ENV PATH=/root/.cargo/bin:/usr/local/pgsql18/bin:$PATH \
     PG_CONFIG=/usr/local/pgsql18/bin/pg_config
 
-RUN apt-get update \
+RUN chmod +x /usr/local/bin/configure-apt-mirrors.sh \
+    && /usr/local/bin/configure-apt-mirrors.sh \
+    && apt-get update \
     && apt-get install -y --no-install-recommends \
         autoconf \
         automake \
@@ -128,19 +134,16 @@ RUN chmod +x docker/build-scripts/*.sh \
     && docker/build-scripts/build-heavy-extensions.sh /workspace/sources \
     && docker/build-scripts/build-vector-stack.sh /workspace/sources
 
-FROM ubuntu:${UBUNTU_VERSION} AS runtime
-ARG DEBIAN_FRONTEND=noninteractive
+FROM apt-base AS runtime
 ARG PG_MAJOR
-SHELL ["/bin/bash", "-o", "pipefail", "-c"]
-ENV LANG=en_US.UTF-8 \
-    LC_ALL=en_US.UTF-8 \
-    PG_PREFIX=/usr/local/pgsql18 \
-    PATH=/usr/local/pgsql18/bin:$PATH \
+ENV PATH=/usr/local/pgsql18/bin:$PATH \
     PGDATA=/var/lib/postgresql/data \
     POSTGRES_USER=postgres \
     POSTGRES_DB=postgres
 
-RUN apt-get update \
+RUN chmod +x /usr/local/bin/configure-apt-mirrors.sh \
+    && /usr/local/bin/configure-apt-mirrors.sh \
+    && apt-get update \
     && apt-get install -y --no-install-recommends \
         ca-certificates \
         gosu \
@@ -173,6 +176,9 @@ RUN apt-get update \
         tini \
         tzdata \
         zlib1g-dev \
+    && ln -snf "/usr/share/zoneinfo/${TZ}" /etc/localtime \
+    && echo "${TZ}" > /etc/timezone \
+    && dpkg-reconfigure -f noninteractive tzdata \
     && locale-gen en_US.UTF-8 \
     && rm -rf /var/lib/apt/lists/*
 
