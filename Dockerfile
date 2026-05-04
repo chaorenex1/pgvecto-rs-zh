@@ -102,6 +102,7 @@ RUN apt-get update \
         meson \
         ninja-build \
         pkg-config \
+        protobuf-c-compiler \
         procps \
         ruby \
         unzip \
