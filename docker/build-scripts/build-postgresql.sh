@@ -7,6 +7,7 @@ source "$SCRIPT_DIR/common.sh"
 
 SOURCES_DIR=${1:?source directory is required}
 PG_VERSION=${PG_VERSION:?PG_VERSION must be set}
+PG_PREFIX=${PG_PREFIX:-/usr/local/pgsql18}
 PG_TARBALL="${SOURCES_DIR}/postgresql-${PG_VERSION}.tar.bz2"
 BUILD_ROOT=/tmp/postgresql-build
 
@@ -22,11 +23,17 @@ tar -xjf "$PG_TARBALL" -C "$BUILD_ROOT"
 cd "$BUILD_ROOT/postgresql-${PG_VERSION}"
 
 configure_args=(
-  --prefix=/usr/local/pgsql
-  --with-icu
-  --with-liburing
+  --prefix=${PG_PREFIX}
+  --with-ssl=openssl
   --with-lz4
-  --with-openssl
+  --with-zstd
+  --with-libxml
+  --with-libxslt
+  --with-systemd
+  --with-uuid=e2fs
+  --with-liburing
+  --with-libnuma
+  --with-libcurl
 )
 
 log_step "Configuring PostgreSQL ${PG_VERSION}"

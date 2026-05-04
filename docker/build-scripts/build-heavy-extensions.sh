@@ -6,8 +6,9 @@ SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 source "$SCRIPT_DIR/common.sh"
 
 SOURCES_DIR=${1:?source directory is required}
-export PATH=/usr/local/pgsql/bin:$PATH
-export PG_CONFIG=/usr/local/pgsql/bin/pg_config
+PG_PREFIX=${PG_PREFIX:-/usr/local/pgsql18}
+export PATH="${PG_PREFIX}/bin:$PATH"
+export PG_CONFIG="${PG_PREFIX}/bin/pg_config"
 
 build_postgis() {
   local dir="${SOURCES_DIR}/postgis"
@@ -27,7 +28,13 @@ build_pgroonga() {
 
   log_step "Building PGroonga"
   cd "$dir"
-  meson setup build --wipe     --prefix=/usr/local/pgsql     -Dinstall_to_postgresql=true     -Dmessage_pack=enabled     -Dpg_config="$PG_CONFIG"     -Dtest=false     -Dxxhash=enabled
+  meson setup build --wipe \
+    --prefix="$PG_PREFIX" \
+    -Dinstall_to_postgresql=true \
+    -Dmessage_pack=enabled \
+    -Dpg_config="$PG_CONFIG" \
+    -Dtest=false \
+    -Dxxhash=enabled
   meson compile -C build -j"$MAKE_JOBS"
   meson install -C build
 }

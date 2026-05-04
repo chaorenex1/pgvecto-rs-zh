@@ -25,19 +25,21 @@ set +a
 
 usage() {
   cat <<EOF
-Usage: bash build.sh [fetch|build|all] [--no-cache]
+Usage: bash build.sh [fetch|build|all|clean] [--no-cache]
 
   fetch     Download PostgreSQL source and clone all extension sources.
   build     Build the Docker image from local sources/.
   all       Fetch sources and then build (default).
+  clean     Remove local pgvecto-rs-zh images for the selected PG major.
 EOF
 }
 
 ACTION=all
 NO_CACHE=0
+IMAGE_NAME=pgvecto-rs-zh
 for arg in "$@"; do
   case "$arg" in
-    fetch|build|all)
+    fetch|build|all|clean)
       ACTION="$arg"
       ;;
     --no-cache)
@@ -60,14 +62,36 @@ if [[ "$ACTION" == "fetch" || "$ACTION" == "all" ]]; then
   bash docker/fetch-sources.sh
 fi
 
+if [[ "$ACTION" == "clean" ]]; then
+  log "Removing local image tags for ${IMAGE_NAME}"
+
+  image_tags=(
+    "${IMAGE_NAME}:pg${PG_MAJOR}"
+    "${IMAGE_NAME}:latest"
+  )
+
+  existing_tags=()
+  for tag in "${image_tags[@]}"; do
+    if docker image inspect "$tag" >/dev/null 2>&1; then
+      existing_tags+=("$tag")
+    fi
+  done
+
+  if [[ "${#existing_tags[@]}" -eq 0 ]]; then
+    echo "No local image tags found for ${IMAGE_NAME}"
+  else
+    docker image rm -f "${existing_tags[@]}"
+  fi
+fi
+
 if [[ "$ACTION" == "build" || "$ACTION" == "all" ]]; then
-  log "Building image pg-minir:pg${PG_MAJOR}"
+  log "Building image ${IMAGE_NAME}:pg${PG_MAJOR}"
 
   build_args=(
     --build-arg "PG_MAJOR=${PG_MAJOR}"
     --build-arg "PG_VERSION=${PG_VERSION}"
-    -t "pg-minir:pg${PG_MAJOR}"
-    -t "pg-minir:latest"
+    -t "${IMAGE_NAME}:pg${PG_MAJOR}"
+    -t "${IMAGE_NAME}:latest"
   )
 
   if [[ "$NO_CACHE" -eq 1 ]]; then

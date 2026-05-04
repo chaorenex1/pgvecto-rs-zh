@@ -8,7 +8,8 @@ ARG PG_MAJOR
 ARG PG_VERSION
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 ENV LANG=en_US.UTF-8 \
-    LC_ALL=en_US.UTF-8
+    LC_ALL=en_US.UTF-8 \
+    PG_PREFIX=/usr/local/pgsql18
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
@@ -17,17 +18,21 @@ RUN apt-get update \
         ca-certificates \
         curl \
         flex \
+        libcurl4-openssl-dev \
         libedit-dev \
         libicu-dev \
         liblz4-dev \
+        libnuma-dev \
         libreadline-dev \
         libssl-dev \
+        libsystemd-dev \
         liburing-dev \
         libxml2-dev \
         libxslt1-dev \
         libzstd-dev \
         locales \
         pkg-config \
+        uuid-dev \
         wget \
         xz-utils \
         zlib1g-dev \
@@ -52,8 +57,9 @@ ARG PG_VERSION
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 ENV LANG=en_US.UTF-8 \
     LC_ALL=en_US.UTF-8 \
-    PATH=/root/.cargo/bin:/usr/local/pgsql/bin:$PATH \
-    PG_CONFIG=/usr/local/pgsql/bin/pg_config
+    PG_PREFIX=/usr/local/pgsql18 \
+    PATH=/root/.cargo/bin:/usr/local/pgsql18/bin:$PATH \
+    PG_CONFIG=/usr/local/pgsql18/bin/pg_config
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
@@ -67,6 +73,7 @@ RUN apt-get update \
         git \
         groonga-token-filter-stem \
         groonga-tokenizer-mecab \
+        libcurl4-openssl-dev \
         libclang-dev \
         libedit-dev \
         libgdal-dev \
@@ -76,11 +83,13 @@ RUN apt-get update \
         libjson-c-dev \
         liblz4-dev \
         libmsgpack-dev \
+        libnuma-dev \
         libproj-dev \
         libprotobuf-c-dev \
         libreadline-dev \
         libsfcgal-dev \
         libssl-dev \
+        libsystemd-dev \
         liburing-dev \
         libxml2-dev \
         libxslt1-dev \
@@ -93,6 +102,7 @@ RUN apt-get update \
         procps \
         ruby \
         unzip \
+        uuid-dev \
         wget \
         zlib1g-dev \
     && locale-gen en_US.UTF-8 \
@@ -101,7 +111,7 @@ RUN apt-get update \
 RUN curl --fail --location --silent --show-error https://sh.rustup.rs \
       | sh -s -- -y --profile minimal --default-toolchain stable
 
-COPY --from=pg-builder /usr/local/pgsql /usr/local/pgsql
+COPY --from=pg-builder /usr/local/pgsql18 /usr/local/pgsql18
 WORKDIR /workspace
 COPY docker/versions.env docker/versions.env
 COPY docker/build-scripts/ docker/build-scripts/
@@ -120,7 +130,8 @@ ARG PG_MAJOR
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 ENV LANG=en_US.UTF-8 \
     LC_ALL=en_US.UTF-8 \
-    PATH=/usr/local/pgsql/bin:$PATH \
+    PG_PREFIX=/usr/local/pgsql18 \
+    PATH=/usr/local/pgsql18/bin:$PATH \
     PGDATA=/var/lib/postgresql/data \
     POSTGRES_USER=postgres \
     POSTGRES_DB=postgres
@@ -131,6 +142,7 @@ RUN apt-get update \
         gosu \
         groonga-token-filter-stem \
         groonga-tokenizer-mecab \
+        libcurl4t64 \
         libedit-dev \
         libgdal-dev \
         libgeos-dev \
@@ -139,11 +151,13 @@ RUN apt-get update \
         libjson-c-dev \
         liblz4-dev \
         libmsgpack-dev \
+        libnuma1 \
         libproj-dev \
         libprotobuf-c-dev \
         libreadline-dev \
         libsfcgal-dev \
         libssl-dev \
+        libsystemd0 \
         liburing-dev \
         libxml2-dev \
         libxslt1-dev \
@@ -158,7 +172,7 @@ RUN apt-get update \
     && locale-gen en_US.UTF-8 \
     && rm -rf /var/lib/apt/lists/*
 
-COPY --from=ext-builder /usr/local/pgsql /usr/local/pgsql
+COPY --from=ext-builder /usr/local/pgsql18 /usr/local/pgsql18
 COPY docker/entrypoint.sh /usr/local/bin/docker-entrypoint.sh
 COPY docker/postgresql.conf /etc/postgresql/postgresql.conf
 COPY docker/initdb/ /docker-entrypoint-initdb.d/
