@@ -13,6 +13,7 @@ ENV LANG=en_US.UTF-8 \
     TZ=${TZ}
 
 COPY docker/build-scripts/configure-apt-mirrors.sh /usr/local/bin/configure-apt-mirrors.sh
+COPY docker/build-scripts/install-groonga-apt-source.sh /usr/local/bin/install-groonga-apt-source.sh
 
 FROM apt-base AS pg-builder
 ARG PG_MAJOR
@@ -66,17 +67,21 @@ ENV PATH=/root/.cargo/bin:/usr/local/pgsql18/bin:$PATH \
     PG_CONFIG=/usr/local/pgsql18/bin/pg_config
 
 RUN chmod +x /usr/local/bin/configure-apt-mirrors.sh \
+    /usr/local/bin/install-groonga-apt-source.sh \
     && /usr/local/bin/configure-apt-mirrors.sh \
+    && apt-get update \
+    && apt-get install -y --no-install-recommends \
+        ca-certificates \
+        curl \
+    && /usr/local/bin/install-groonga-apt-source.sh \
     && apt-get update \
     && apt-get install -y --no-install-recommends \
         autoconf \
         automake \
         bison \
         build-essential \
-        ca-certificates \
         clang \
         cmake \
-        curl \
         flex \
         git \
         groonga-token-filter-stem \
@@ -142,10 +147,15 @@ ENV PATH=/usr/local/pgsql18/bin:$PATH \
     POSTGRES_DB=postgres
 
 RUN chmod +x /usr/local/bin/configure-apt-mirrors.sh \
+    /usr/local/bin/install-groonga-apt-source.sh \
     && /usr/local/bin/configure-apt-mirrors.sh \
     && apt-get update \
     && apt-get install -y --no-install-recommends \
         ca-certificates \
+        curl \
+    && /usr/local/bin/install-groonga-apt-source.sh \
+    && apt-get update \
+    && apt-get install -y --no-install-recommends \
         gosu \
         groonga-token-filter-stem \
         groonga-tokenizer-mecab \
