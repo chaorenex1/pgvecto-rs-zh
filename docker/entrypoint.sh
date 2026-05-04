@@ -8,6 +8,7 @@ export POSTGRES_DB=${POSTGRES_DB:-$POSTGRES_USER}
 export POSTGRES_CONFIG_FILE=${POSTGRES_CONFIG_FILE:-/etc/postgresql/postgresql.conf}
 export POSTGRES_FALLBACK_CONFIG_FILE=${POSTGRES_FALLBACK_CONFIG_FILE:-/etc/postgresql/postgresql.conf}
 export POSTGRES_IO_METHOD=${POSTGRES_IO_METHOD:-}
+export POSTGRES_INIT_MARKER_FILE=${POSTGRES_INIT_MARKER_FILE:-$PGDATA/.container_init_completed}
 
 warn_permission_issue() {
   echo "warning: $*" >&2
@@ -79,44 +80,11 @@ run_init_scripts() {
   done
 }
 
-if [[ $# -eq 0 ]]; then
-  set -- postgres
-elif [[ "$1" == -* ]]; then
-  set -- postgres "$@"
-fi
-
-if [[ "$1" != postgres ]]; then
-  exec "$@"
-fi
-
-if [[ $(id -u) -eq 0 ]]; then
-  mkdir -p "$PGDATA" /var/run/postgresql
-  if ! chown postgres:postgres "$PGDATA" 2>/dev/null; then
-    warn_permission_issue "could not chown $PGDATA to postgres:postgres; bind-mounted host directories may ignore container ownership changes"
-  fi
-  chown -R postgres:postgres /var/lib/postgresql /var/run/postgresql
-  chmod 2775 /var/run/postgresql
-  sysctl --system >/dev/null 2>&1 || echo "warning: some sysctl values could not be applied inside the container"
-  exec gosu postgres "$BASH_SOURCE" "$@"
-fi
-
-prepare_pgdata_dir
-
-ACTIVE_POSTGRES_CONFIG_FILE=$(resolve_postgres_config_file)
-mapfile -t POSTGRES_RUNTIME_OPTIONS < <(build_postgres_runtime_options "$ACTIVE_POSTGRES_CONFIG_FILE")
-
-if [[ ! -s "$PGDATA/PG_VERSION" ]]; then
+run_post_init_tasks() {
   if [[ -z "${POSTGRES_PASSWORD:-}" ]]; then
-    echo "POSTGRES_PASSWORD must be set for first-time initialization"
+    echo "POSTGRES_PASSWORD must be set for initialization tasks"
     exit 1
   fi
-
-  tmp_pw=$(mktemp)
-  trap 'rm -f "$tmp_pw"' EXIT
-  printf '%s\n' "$POSTGRES_PASSWORD" > "$tmp_pw"
-
-  initdb --username=postgres --pwfile="$tmp_pw" --auth-local=trust --auth-host=scram-sha-256 ${POSTGRES_INITDB_ARGS:-} -D "$PGDATA"
-  echo "host all all all scram-sha-256" >> "$PGDATA/pg_hba.conf"
 
   pg_ctl -D "$PGDATA" -o "-c listen_addresses='' ${POSTGRES_RUNTIME_OPTIONS[*]}" -w start
 
@@ -172,7 +140,52 @@ SQL
   fi
 
   run_init_scripts
+  touch "$POSTGRES_INIT_MARKER_FILE"
   pg_ctl -D "$PGDATA" -m fast -w stop
+}
+
+if [[ $# -eq 0 ]]; then
+  set -- postgres
+elif [[ "$1" == -* ]]; then
+  set -- postgres "$@"
+fi
+
+if [[ "$1" != postgres ]]; then
+  exec "$@"
+fi
+
+if [[ $(id -u) -eq 0 ]]; then
+  mkdir -p "$PGDATA" /var/run/postgresql
+  if ! chown postgres:postgres "$PGDATA" 2>/dev/null; then
+    warn_permission_issue "could not chown $PGDATA to postgres:postgres; bind-mounted host directories may ignore container ownership changes"
+  fi
+  chown -R postgres:postgres /var/lib/postgresql /var/run/postgresql
+  chmod 2775 /var/run/postgresql
+  sysctl --system >/dev/null 2>&1 || echo "warning: some sysctl values could not be applied inside the container"
+  exec gosu postgres "$BASH_SOURCE" "$@"
+fi
+
+prepare_pgdata_dir
+
+ACTIVE_POSTGRES_CONFIG_FILE=$(resolve_postgres_config_file)
+mapfile -t POSTGRES_RUNTIME_OPTIONS < <(build_postgres_runtime_options "$ACTIVE_POSTGRES_CONFIG_FILE")
+
+if [[ ! -s "$PGDATA/PG_VERSION" ]]; then
+  if [[ -z "${POSTGRES_PASSWORD:-}" ]]; then
+    echo "POSTGRES_PASSWORD must be set for first-time initialization"
+    exit 1
+  fi
+
+  tmp_pw=$(mktemp)
+  trap 'rm -f "$tmp_pw"' EXIT
+  printf '%s\n' "$POSTGRES_PASSWORD" > "$tmp_pw"
+
+  initdb --username=postgres --pwfile="$tmp_pw" --auth-local=trust --auth-host=scram-sha-256 ${POSTGRES_INITDB_ARGS:-} -D "$PGDATA"
+  echo "host all all all scram-sha-256" >> "$PGDATA/pg_hba.conf"
+fi
+
+if [[ ! -f "$POSTGRES_INIT_MARKER_FILE" ]]; then
+  run_post_init_tasks
 fi
 
 exec postgres -D "$PGDATA" "${POSTGRES_RUNTIME_OPTIONS[@]}"
