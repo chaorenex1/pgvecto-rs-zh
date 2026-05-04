@@ -152,37 +152,37 @@ WHERE datname = current_database();
 
 \echo '== Background writer =='
 
-SELECT checkpoints_timed,
+-- SELECT checkpoints_timed,
 
-       checkpoints_req,
+--        checkpoints_req,
 
-       buffers_checkpoint,
+--        buffers_checkpoint,
 
-       buffers_clean,
+--        buffers_clean,
 
-       maxwritten_clean,
+--        maxwritten_clean,
 
-       buffers_backend,
+--        buffers_backend,
 
-       buffers_backend_fsync
+--        buffers_backend_fsync
 
-FROM pg_stat_bgwriter;
+-- FROM pg_stat_bgwriter;
 
 \echo '== Top statements (if any) =='
 
-SELECT queryid,
+-- SELECT queryid,
 
-       calls,
+--        calls,
 
-       ROUND(total_exec_time::numeric, 3) AS total_exec_time_ms,
+--        ROUND(total_exec_time::numeric, 3) AS total_exec_time_ms,
 
-       ROUND(mean_exec_time::numeric, 3) AS mean_exec_time_ms,
+--        ROUND(mean_exec_time::numeric, 3) AS mean_exec_time_ms,
 
-       LEFT(query, 120) AS sample_query
+--        LEFT(query, 120) AS sample_query
 
-FROM pg_stat_statements
+-- FROM pg_stat_statements
 
-ORDER BY total_exec_time DESC
+-- ORDER BY total_exec_time DESC
 
-LIMIT 10;
+-- LIMIT 10;
 
