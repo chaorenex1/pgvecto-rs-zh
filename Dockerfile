@@ -10,29 +10,27 @@ SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 ENV LANG=en_US.UTF-8 \
     LC_ALL=en_US.UTF-8
 
-RUN packages=(
-      bison
-      build-essential
-      ca-certificates
-      curl
-      flex
-      libedit-dev
-      libicu-dev
-      liblz4-dev
-      libreadline-dev
-      libssl-dev
-      liburing-dev
-      libxml2-dev
-      libxslt1-dev
-      libzstd-dev
-      locales
-      pkg-config
-      wget
-      xz-utils
-      zlib1g-dev
-    ) \
-    && apt-get update \
-    && apt-get install -y --no-install-recommends "${packages[@]}" \
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+        bison \
+        build-essential \
+        ca-certificates \
+        curl \
+        flex \
+        libedit-dev \
+        libicu-dev \
+        liblz4-dev \
+        libreadline-dev \
+        libssl-dev \
+        liburing-dev \
+        libxml2-dev \
+        libxslt1-dev \
+        libzstd-dev \
+        locales \
+        pkg-config \
+        wget \
+        xz-utils \
+        zlib1g-dev \
     && locale-gen en_US.UTF-8 \
     && rm -rf /var/lib/apt/lists/*
 
@@ -57,48 +55,46 @@ ENV LANG=en_US.UTF-8 \
     PATH=/root/.cargo/bin:/usr/local/pgsql/bin:$PATH \
     PG_CONFIG=/usr/local/pgsql/bin/pg_config
 
-RUN packages=(
-      bison
-      build-essential
-      ca-certificates
-      clang
-      cmake
-      curl
-      flex
-      git
-      groonga-token-filter-stem
-      groonga-tokenizer-mecab
-      libclang-dev
-      libedit-dev
-      libgdal-dev
-      libgeos-dev
-      libgroonga-dev
-      libicu-dev
-      libjson-c-dev
-      liblz4-dev
-      libmsgpack-dev
-      libproj-dev
-      libprotobuf-c-dev
-      libreadline-dev
-      libsfcgal-dev
-      libssl-dev
-      liburing-dev
-      libxml2-dev
-      libxslt1-dev
-      libxxhash-dev
-      libzstd-dev
-      locales
-      meson
-      ninja-build
-      pkg-config
-      procps
-      ruby
-      unzip
-      wget
-      zlib1g-dev
-    ) \
-    && apt-get update \
-    && apt-get install -y --no-install-recommends "${packages[@]}" \
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+        bison \
+        build-essential \
+        ca-certificates \
+        clang \
+        cmake \
+        curl \
+        flex \
+        git \
+        groonga-token-filter-stem \
+        groonga-tokenizer-mecab \
+        libclang-dev \
+        libedit-dev \
+        libgdal-dev \
+        libgeos-dev \
+        libgroonga-dev \
+        libicu-dev \
+        libjson-c-dev \
+        liblz4-dev \
+        libmsgpack-dev \
+        libproj-dev \
+        libprotobuf-c-dev \
+        libreadline-dev \
+        libsfcgal-dev \
+        libssl-dev \
+        liburing-dev \
+        libxml2-dev \
+        libxslt1-dev \
+        libxxhash-dev \
+        libzstd-dev \
+        locales \
+        meson \
+        ninja-build \
+        pkg-config \
+        procps \
+        ruby \
+        unzip \
+        wget \
+        zlib1g-dev \
     && locale-gen en_US.UTF-8 \
     && rm -rf /var/lib/apt/lists/*
 
@@ -129,38 +125,36 @@ ENV LANG=en_US.UTF-8 \
     POSTGRES_USER=postgres \
     POSTGRES_DB=postgres
 
-RUN packages=(
-      ca-certificates
-      gosu
-      groonga-token-filter-stem
-      groonga-tokenizer-mecab
-      libedit-dev
-      libgdal-dev
-      libgeos-dev
-      libgroonga-dev
-      libicu-dev
-      libjson-c-dev
-      liblz4-dev
-      libmsgpack-dev
-      libproj-dev
-      libprotobuf-c-dev
-      libreadline-dev
-      libsfcgal-dev
-      libssl-dev
-      liburing-dev
-      libxml2-dev
-      libxslt1-dev
-      libxxhash-dev
-      libzstd-dev
-      locales
-      procps
-      ruby
-      tini
-      tzdata
-      zlib1g-dev
-    ) \
-    && apt-get update \
-    && apt-get install -y --no-install-recommends "${packages[@]}" \
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+        ca-certificates \
+        gosu \
+        groonga-token-filter-stem \
+        groonga-tokenizer-mecab \
+        libedit-dev \
+        libgdal-dev \
+        libgeos-dev \
+        libgroonga-dev \
+        libicu-dev \
+        libjson-c-dev \
+        liblz4-dev \
+        libmsgpack-dev \
+        libproj-dev \
+        libprotobuf-c-dev \
+        libreadline-dev \
+        libsfcgal-dev \
+        libssl-dev \
+        liburing-dev \
+        libxml2-dev \
+        libxslt1-dev \
+        libxxhash-dev \
+        libzstd-dev \
+        locales \
+        procps \
+        ruby \
+        tini \
+        tzdata \
+        zlib1g-dev \
     && locale-gen en_US.UTF-8 \
     && rm -rf /var/lib/apt/lists/*
 
