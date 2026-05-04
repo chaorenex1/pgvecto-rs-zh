@@ -43,13 +43,17 @@ bash build.sh all
 Start the database:
 
 ```bash
-docker compose up -d --build
+docker compose up -d
 ```
 
-Run the command from the repository root. The repository root must contain a
-`postgresql.conf` file. PostgreSQL data will be initialized under `pgdata/` in
-the same directory so the compose file and custom config can coexist without
-making `PGDATA` non-empty.
+Run the command from the repository root. If the repository root contains a
+`postgresql.conf` file, the container will use it as the custom config. If that
+file is missing, the container falls back to the baked-in
+`/etc/postgresql/postgresql.conf` from the image. PostgreSQL data will be
+initialized under `pgdata/` in the same directory so the compose file and
+custom config can coexist without making `PGDATA` non-empty.
+The container checks `/runtime/postgresql.conf` first, which comes from the
+directory where `docker compose` is executed.
 For example:
 
 ```text
