@@ -63,6 +63,8 @@ ENV LANG=en_US.UTF-8 \
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
+        autoconf \
+        automake \
         bison \
         build-essential \
         ca-certificates \
@@ -83,6 +85,7 @@ RUN apt-get update \
         libjson-c-dev \
         liblz4-dev \
         libmsgpack-dev \
+        libtool \
         libnuma-dev \
         libproj-dev \
         libprotobuf-c-dev \
