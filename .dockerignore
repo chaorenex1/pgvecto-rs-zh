@@ -1,0 +1,7 @@
+.git
+.omx
+pg_data
+**/.git
+**/.github
+sources/**/build
+sources/**/.cache

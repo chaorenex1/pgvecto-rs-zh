@@ -1,31 +1,26 @@
-version: '3'
+version: "3.9"
 
 services:
   postgres:
     build:
       context: .
       dockerfile: Dockerfile
+      args:
+        PG_MAJOR: 18
+        PG_VERSION: 18.3
+    image: pgvecto-rs-zh:latest
     restart: unless-stopped
     environment:
-      - POSTGRES_PASSWORD=postgres
-      - POSTGRES_USER=postgres
-      - POSTGRES_DB=postgres
-      - POSTGRES_SHARED_PRELOAD_LIBRARIES=pg_jieba.so,vectors.so,age.so,pg_cron,pg_stat_statements,pg_partman_bgw,pgaudit
-      # AGE配置
-      - AGENSGRAPH_GRAPH_PATH=/var/lib/postgresql/data/ag_graphs
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: postgres
+      POSTGRES_INITDB_ARGS: --data-checksums
     ports:
       - "5432:5432"
     volumes:
       - ./pg_data:/var/lib/postgresql/data
-      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
-      - ./postgresql.auto.conf:/var/lib/postgresql/data/postgresql.auto.conf
     healthcheck:
-      test: [ "CMD", "pg_isready", "-U", "postgres" ]
-      interval: 5s
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 10s
       timeout: 5s
-      retries: 5
-    command: >
-      postgres
-      -c shared_preload_libraries=$${POSTGRES_SHARED_PRELOAD_LIBRARIES}
-      -c compute_query_id=on
-      -c search_path=public,"$${user}",ag_catalog,vectors
+      retries: 6
