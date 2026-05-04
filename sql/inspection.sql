@@ -110,9 +110,9 @@ SELECT EXISTS (
 
        ) AS has_sample_graph,
 
-       to_regprocedure('public.to_jieba_tsvector(text)') IS NOT NULL AS has_to_jieba_tsvector,
+       to_regprocedure('public.to_jieba_tsvector(text)') IS NOT NULL AS has_optional_to_jieba_tsvector,
 
-       to_regprocedure('public.create_jieba_index(regclass,text)') IS NOT NULL AS has_create_jieba_index,
+       to_regprocedure('public.create_jieba_index(regclass,text)') IS NOT NULL AS has_optional_create_jieba_index,
 
        to_regnamespace('partman') IS NOT NULL AS has_partman_schema,
 
