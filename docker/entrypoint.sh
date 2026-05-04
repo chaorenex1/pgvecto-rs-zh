@@ -8,6 +8,10 @@ export POSTGRES_DB=${POSTGRES_DB:-$POSTGRES_USER}
 export POSTGRES_CONFIG_FILE=${POSTGRES_CONFIG_FILE:-/etc/postgresql/postgresql.conf}
 export POSTGRES_FALLBACK_CONFIG_FILE=${POSTGRES_FALLBACK_CONFIG_FILE:-/etc/postgresql/postgresql.conf}
 
+warn_permission_issue() {
+  echo "warning: $*" >&2
+}
+
 resolve_postgres_config_file() {
   if [[ -f "$POSTGRES_CONFIG_FILE" ]]; then
     printf '%s\n' "$POSTGRES_CONFIG_FILE"
@@ -23,6 +27,24 @@ resolve_postgres_config_file() {
   echo "postgres config file not found: $POSTGRES_CONFIG_FILE"
   echo "postgres fallback config file not found: $POSTGRES_FALLBACK_CONFIG_FILE"
   exit 1
+}
+
+prepare_pgdata_dir() {
+  local probe_file
+
+  mkdir -p "$PGDATA"
+
+  if ! chmod 700 "$PGDATA" 2>/dev/null; then
+    warn_permission_issue "could not chmod 700 $PGDATA; continuing with existing host filesystem permissions"
+  fi
+
+  probe_file="$PGDATA/.write-test.$$"
+  if ! : > "$probe_file" 2>/dev/null; then
+    echo "PGDATA is not writable: $PGDATA" >&2
+    ls -ld "$PGDATA" >&2 || true
+    exit 1
+  fi
+  rm -f "$probe_file"
 }
 
 run_init_scripts() {
@@ -57,14 +79,16 @@ fi
 
 if [[ $(id -u) -eq 0 ]]; then
   mkdir -p "$PGDATA" /var/run/postgresql
+  if ! chown postgres:postgres "$PGDATA" 2>/dev/null; then
+    warn_permission_issue "could not chown $PGDATA to postgres:postgres; bind-mounted host directories may ignore container ownership changes"
+  fi
   chown -R postgres:postgres /var/lib/postgresql /var/run/postgresql
   chmod 2775 /var/run/postgresql
   sysctl --system >/dev/null 2>&1 || echo "warning: some sysctl values could not be applied inside the container"
   exec gosu postgres "$BASH_SOURCE" "$@"
 fi
 
-mkdir -p "$PGDATA"
-chmod 700 "$PGDATA"
+prepare_pgdata_dir
 
 ACTIVE_POSTGRES_CONFIG_FILE=$(resolve_postgres_config_file)
 
