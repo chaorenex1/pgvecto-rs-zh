@@ -1,10 +1,11 @@
-FROM tensorchord/pgvecto-rs:pg16-v0.3.0
+FROM tensorchord/vchord-postgres:pg18-v1.1.1
 
 # Set DEBIAN_FRONTEND to noninteractive to prevent interactive prompts
 ENV DEBIAN_FRONTEND=noninteractive
+ENV POSTGRES_SHARED_PRELOAD_LIBRARIES="pg_jieba.so,vectors.so,age.so,pg_cron,pg_stat_statements,pg_partman_bgw,pgaudit"
 
 # Arguments
-ARG PG_MAJOR=16
+ARG PG_MAJOR=18
 
 # 1. Switch main Debian/Ubuntu APT sources to a Chinese mirror (Aliyun)
 #    and PGDG sources to Tsinghua mirror for potentially faster downloads.
@@ -27,14 +28,30 @@ RUN \
     sed -i 's|http://apt.postgresql.org/pub/repos/apt|http://mirrors.tuna.tsinghua.edu.cn/postgresql/repos/apt|g' {} + || \
   echo "WARNING: PGDG APT source replacement did not find a typical pgdg.list or encountered an error. Proceeding..."
 
-# 2. Install build dependencies for pg_jieba
+# 2. Add the PGroonga package source and install packaged extensions
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
+    ca-certificates \
+    lsb-release \
+    wget \
+    postgresql-contrib-${PG_MAJOR} \
+    postgresql-${PG_MAJOR}-cron \
+    postgresql-${PG_MAJOR}-partman \
+    postgresql-${PG_MAJOR}-postgis-3 \
+    postgresql-${PG_MAJOR}-pgaudit \
+    postgresql-${PG_MAJOR}-repack \
     build-essential \
     unzip \
     procps \
     cmake \
     postgresql-server-dev-${PG_MAJOR} && \
+    wget https://packages.groonga.org/debian/groonga-apt-source-latest-$(lsb_release --codename --short).deb && \
+    apt-get install -y --no-install-recommends \
+      ./groonga-apt-source-latest-$(lsb_release --codename --short).deb && \
+    rm -f ./groonga-apt-source-latest-$(lsb_release --codename --short).deb && \
+    apt-get update && \
+    apt-get install -y --no-install-recommends \
+    postgresql-${PG_MAJOR}-pgdg-pgroonga && \
     rm -rf /var/lib/apt/lists/*
 
 # 3. Copy pg_jieba from local source
@@ -99,11 +116,11 @@ RUN cd /tmp/age && \
 #    echo "INFO: pgvector installed successfully"
 
 # 11. Modify PostgreSQL configuration to load extensions
-RUN echo "shared_preload_libraries = 'pg_jieba.so,vectors.so,age.so'" >> /usr/share/postgresql/${PG_MAJOR}/postgresql.conf.sample
+RUN printf "shared_preload_libraries = '%s'\ncompute_query_id = on\n" "$POSTGRES_SHARED_PRELOAD_LIBRARIES" >> /usr/share/postgresql/${PG_MAJOR}/postgresql.conf.sample
 
 # 12. Clean up build dependencies
 RUN apt-get update && \
-    apt-get purge -y build-essential unzip cmake && \
+    apt-get purge -y build-essential unzip cmake wget lsb-release && \
     apt-get purge -y postgresql-server-dev-${PG_MAJOR} && \
     apt-get autoremove -y --purge && \
     rm -rf /var/lib/apt/lists/*
