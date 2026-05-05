@@ -1,49 +1,31 @@
 CREATE EXTENSION IF NOT EXISTS pg_cron;
 
--- 创建基于pg_jieba的中文全文搜索配置
-DO $BLOCK$
-BEGIN
-  -- 检查中文搜索配置是否已存在
-  IF NOT EXISTS (
-      SELECT 1 FROM pg_ts_config
-      WHERE cfgname = 'jieba_cfg'
-  ) THEN
-      -- 创建中文全文搜索配置
-      EXECUTE 'CREATE TEXT SEARCH CONFIGURATION jieba_cfg (PARSER = jieba)';
-      EXECUTE 'ALTER TEXT SEARCH CONFIGURATION jieba_cfg ADD MAPPING FOR n,v,a,i,e,l WITH simple';
-      RAISE NOTICE 'Text search configuration jieba_cfg created.';
-  ELSE
-      RAISE NOTICE 'Text search configuration jieba_cfg already exists.';
-  END IF;
-END;
-$BLOCK$;
-
 -- Seed template1 so the app database cloned from it inherits the extension stack.
 \connect template1
 
 -- 把 search_path 固定为 public，避免落到别的 schema
-ALTER DATABASE template1 SET search_path = 'bm25_catalog,tokenizer_catalog,ag_catalog,"$user",public';
+ALTER DATABASE template1 SET search_path = public;
 
-SET search_path = 'bm25_catalog,tokenizer_catalog,ag_catalog,"$user",public';
+SET search_path = public;
 
 CREATE SCHEMA IF NOT EXISTS public;
 
-CREATE EXTENSION IF NOT EXISTS vector WITH SCHEMA public;
-CREATE EXTENSION IF NOT EXISTS vchord WITH SCHEMA public;
-CREATE EXTENSION IF NOT EXISTS pg_jieba WITH SCHEMA public;
+CREATE EXTENSION IF NOT EXISTS vector;
+CREATE EXTENSION IF NOT EXISTS vchord;
+CREATE EXTENSION IF NOT EXISTS pg_jieba;
 CREATE EXTENSION IF NOT EXISTS age;
-CREATE EXTENSION IF NOT EXISTS "uuid-ossp" WITH SCHEMA public;
-CREATE EXTENSION IF NOT EXISTS pgcrypto WITH SCHEMA public;
-CREATE EXTENSION IF NOT EXISTS hstore WITH SCHEMA public;
-CREATE EXTENSION IF NOT EXISTS unaccent WITH SCHEMA public;
-CREATE EXTENSION IF NOT EXISTS postgis WITH SCHEMA public;
-CREATE EXTENSION IF NOT EXISTS pg_trgm WITH SCHEMA public;
-CREATE EXTENSION IF NOT EXISTS pg_stat_statements WITH SCHEMA public;
-CREATE EXTENSION IF NOT EXISTS btree_gin WITH SCHEMA public;
-CREATE EXTENSION IF NOT EXISTS pgaudit WITH SCHEMA public;
-CREATE EXTENSION IF NOT EXISTS amcheck WITH SCHEMA public;
-CREATE EXTENSION IF NOT EXISTS pg_repack WITH SCHEMA public;
-CREATE EXTENSION IF NOT EXISTS pgroonga WITH SCHEMA public;
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
+CREATE EXTENSION IF NOT EXISTS hstore;
+CREATE EXTENSION IF NOT EXISTS unaccent;
+CREATE EXTENSION IF NOT EXISTS postgis;
+CREATE EXTENSION IF NOT EXISTS pg_trgm;
+CREATE EXTENSION IF NOT EXISTS pg_stat_statements;
+CREATE EXTENSION IF NOT EXISTS btree_gin;
+CREATE EXTENSION IF NOT EXISTS pgaudit;
+CREATE EXTENSION IF NOT EXISTS amcheck;
+CREATE EXTENSION IF NOT EXISTS pg_repack;
+CREATE EXTENSION IF NOT EXISTS pgroonga;
 CREATE SCHEMA IF NOT EXISTS partman;
 CREATE EXTENSION IF NOT EXISTS pg_partman WITH SCHEMA partman;
 CREATE EXTENSION IF NOT EXISTS pg_tokenizer;
