@@ -80,6 +80,35 @@ run_init_scripts() {
   done
 }
 
+create_app_database() {
+  if [[ "$POSTGRES_DB" == postgres ]]; then
+    return 0
+  fi
+
+  psql \
+    -v ON_ERROR_STOP=1 \
+    --username postgres \
+    --dbname postgres \
+    --set=app_db="$POSTGRES_DB" \
+    --set=app_user="$POSTGRES_USER" <<'SQL'
+SELECT format(
+  'CREATE DATABASE %I WITH OWNER %I TEMPLATE template1',
+  :'app_db',
+  :'app_user'
+)
+WHERE NOT EXISTS (
+  SELECT 1
+  FROM pg_database
+  WHERE datname = :'app_db'
+)\gexec
+
+SELECT format(
+  'ALTER DATABASE %I SET search_path = public',
+  :'app_db'
+)\gexec
+SQL
+}
+
 run_post_init_tasks() {
   if [[ -z "${POSTGRES_PASSWORD:-}" ]]; then
     echo "POSTGRES_PASSWORD must be set for initialization tasks"
@@ -119,27 +148,8 @@ SELECT format(
 SQL
   fi
 
-  if [[ "$POSTGRES_DB" != postgres ]]; then
-    psql \
-      -v ON_ERROR_STOP=1 \
-      --username postgres \
-      --dbname postgres \
-      --set=app_db="$POSTGRES_DB" \
-      --set=app_user="$POSTGRES_USER" <<'SQL'
-SELECT format(
-  'CREATE DATABASE %I OWNER %I',
-  :'app_db',
-  :'app_user'
-)
-WHERE NOT EXISTS (
-  SELECT 1
-  FROM pg_database
-  WHERE datname = :'app_db'
-)\gexec
-SQL
-  fi
-
   run_init_scripts
+  create_app_database
   touch "$POSTGRES_INIT_MARKER_FILE"
   pg_ctl -D "$PGDATA" -m fast -w stop
 }
