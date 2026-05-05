@@ -1,6 +1,6 @@
 CREATE EXTENSION IF NOT EXISTS pg_cron;
 
-\connect template1
+\template1
 
 CREATE SCHEMA IF NOT EXISTS public;
 
