@@ -1,5 +1,23 @@
 CREATE EXTENSION IF NOT EXISTS pg_cron;
 
+-- 创建基于pg_jieba的中文全文搜索配置
+DO $BLOCK$
+BEGIN
+  -- 检查中文搜索配置是否已存在
+  IF NOT EXISTS (
+      SELECT 1 FROM pg_ts_config
+      WHERE cfgname = 'jieba_cfg'
+  ) THEN
+      -- 创建中文全文搜索配置
+      EXECUTE 'CREATE TEXT SEARCH CONFIGURATION jieba_cfg (PARSER = jieba)';
+      EXECUTE 'ALTER TEXT SEARCH CONFIGURATION jieba_cfg ADD MAPPING FOR n,v,a,i,e,l WITH simple';
+      RAISE NOTICE 'Text search configuration jieba_cfg created.';
+  ELSE
+      RAISE NOTICE 'Text search configuration jieba_cfg already exists.';
+  END IF;
+END;
+$BLOCK$;
+
 -- Seed template1 so the app database cloned from it inherits the extension stack.
 \connect template1
 
