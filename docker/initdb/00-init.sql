@@ -3,7 +3,7 @@ CREATE EXTENSION IF NOT EXISTS age;
 
 BEGIN;
 LOAD 'age';
-
+SET search_path = ag_catalog, "$user", public;
 DO $block$
 BEGIN
   IF NOT EXISTS (
