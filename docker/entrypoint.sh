@@ -101,11 +101,6 @@ WHERE NOT EXISTS (
   FROM pg_database
   WHERE datname = :'app_db'
 )\gexec
-
-SELECT format(
-  'ALTER DATABASE %I SET search_path = public',
-  :'app_db'
-)\gexec
 SQL
 }
 
