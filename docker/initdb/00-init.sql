@@ -1,14 +1,14 @@
 CREATE EXTENSION IF NOT EXISTS pg_cron;
 
 -- Seed template1 so the app database cloned from it inherits the extension stack.
-\connect template1
+-- \connect template1
 
 -- 把 search_path 固定为 public，避免落到别的 schema
-ALTER DATABASE template1 SET search_path = public;
+-- ALTER DATABASE template1 SET search_path = public;
 
-SET LOCAL search_path = public;
+-- SET LOCAL search_path = public;
 
-CREATE SCHEMA IF NOT EXISTS public;
+-- CREATE SCHEMA IF NOT EXISTS public;
 
 CREATE EXTENSION IF NOT EXISTS vector WITH SCHEMA public;
 CREATE EXTENSION IF NOT EXISTS vchord WITH SCHEMA public;
