@@ -21,10 +21,10 @@ CREATE EXTENSION IF NOT EXISTS age;
 -- Seed template1 so the app database cloned from it inherits the extension stack.
 \connect template1
 
--- 把 search_path 固定为 public，避免落到别的 schema
-ALTER DATABASE template1 SET search_path = public;
+-- Keep normal sessions on the standard user/public path; AGE sessions opt in explicitly.
+ALTER DATABASE template1 SET search_path = "$user", public;
 
-SET search_path = public;
+SET search_path = "$user", public;
 
 CREATE SCHEMA IF NOT EXISTS public;
 
