@@ -36,3 +36,6 @@
 
 \ir 18-pg_partman.sql
 
+\ir 19-pg_tokenizer.sql
+
+\ir 20-vchord_bm25.sql
