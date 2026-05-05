@@ -72,7 +72,7 @@ WHERE e.extname IN (
 
   'pg_partman','pg_repack','pg_stat_statements','pg_trgm','pgcrypto',
 
-  'pgroonga','postgis','unaccent','uuid-ossp','vchord','vector'
+  'pg_tokenizer','pgroonga','postgis','unaccent','uuid-ossp','vchord','vchord_bm25','vector'
 
 )
 
@@ -90,7 +90,7 @@ WHERE name IN (
 
   'pg_partman','pg_repack','pg_stat_statements','pg_trgm','pgcrypto',
 
-  'pgroonga','postgis','unaccent','uuid-ossp','vchord','vector'
+  'pg_tokenizer','pgroonga','postgis','unaccent','uuid-ossp','vchord','vchord_bm25','vector'
 
 )
 
@@ -185,4 +185,3 @@ WHERE datname = current_database();
 -- ORDER BY total_exec_time DESC
 
 -- LIMIT 10;
-

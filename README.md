@@ -8,7 +8,7 @@ This project builds a PostgreSQL 18 image from an `ubuntu:24.04` base, compiles 
 - Chinese text search with `pg_jieba`
 - Graph support with `Apache AGE`
 - Scheduling, auditing, partitioning, and maintenance extensions
-- PostGIS, PGroonga, pgvector, and VectorChord
+- PostGIS, PGroonga, pgvector, VectorChord, VectorChord-bm25, and pg_tokenizer.rs
 - Image-level PostgreSQL defaults, sysctl defaults, and init SQL
 
 ## Layout
@@ -82,5 +82,5 @@ docker compose exec postgres psql -U postgres -c "SHOW io_method;"
 Check extension availability:
 
 ```bash
-docker compose exec postgres psql -U postgres -c "SELECT name, default_version FROM pg_available_extensions WHERE name IN ('age','amcheck','btree_gin','hstore','pgaudit','pg_cron','pg_jieba','pg_partman','pg_repack','pg_stat_statements','pg_trgm','pgcrypto','pgroonga','postgis','unaccent','uuid-ossp','vchord','vector') ORDER BY name;"
+docker compose exec postgres psql -U postgres -c "SELECT name, default_version FROM pg_available_extensions WHERE name IN ('age','amcheck','btree_gin','hstore','pgaudit','pg_cron','pg_jieba','pg_partman','pg_repack','pg_stat_statements','pg_trgm','pgcrypto','pg_tokenizer','pgroonga','postgis','unaccent','uuid-ossp','vchord','vchord_bm25','vector') ORDER BY name;"
 ```

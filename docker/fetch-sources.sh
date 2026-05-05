@@ -61,3 +61,5 @@ sync_repo postgis "$POSTGIS_REPO" "$POSTGIS_REF"
 sync_repo pgroonga "$PGROONGA_REPO" "$PGROONGA_REF" 1
 sync_repo pgvector "$PGVECTOR_REPO" "$PGVECTOR_REF"
 sync_repo vectorchord "$VECTORCHORD_REPO" "$VECTORCHORD_REF"
+sync_repo vectorchord-bm25 "$VECTORCHORD_BM25_REPO" "$VECTORCHORD_BM25_REF"
+sync_repo pg_tokenizer.rs "$PG_TOKENIZER_REPO" "$PG_TOKENIZER_REF"
