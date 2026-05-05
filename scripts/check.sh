@@ -14,7 +14,7 @@ run_sql() {
   local script_path=$1
   echo "== running ${script_path} =="
   docker compose exec "$SERVICE_NAME" \
-    psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$CHECK_DB" -f "$script_path"
+    psql -v ON_ERROR_STOP=1 -v "template_db=$CHECK_DB" -U "$POSTGRES_USER" -d "$CHECK_DB" -f "$script_path"
 }
 
 run_sql /runtime/sql/inspection.sql

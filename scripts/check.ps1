@@ -17,7 +17,7 @@ function Invoke-SqlScript {
 
     Write-Host "== running $ScriptPath =="
     docker compose exec $serviceName `
-        psql -v ON_ERROR_STOP=1 -U $postgresUser -d $checkDb -f $ScriptPath
+        psql -v ON_ERROR_STOP=1 -v "template_db=$checkDb" -U $postgresUser -d $checkDb -f $ScriptPath
 }
 
 Invoke-SqlScript "/runtime/sql/inspection.sql"

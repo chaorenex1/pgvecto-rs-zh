@@ -2,6 +2,8 @@
 
 \echo '== pg_cron =='
 
+\connect postgres
+
 BEGIN;
 
 WITH scheduled AS (
@@ -30,3 +32,4 @@ WHERE jobname = 'minir-pg-smoke-test';
 
 ROLLBACK;
 
+\connect :template_db
