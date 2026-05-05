@@ -10,6 +10,12 @@ PG_PREFIX=${PG_PREFIX:-/usr/local/pgsql18}
 export PATH="/root/.cargo/bin:${PG_PREFIX}/bin:$PATH"
 export PG_CONFIG="${PG_PREFIX}/bin/pg_config"
 export LLVM_CONFIG=${LLVM_CONFIG:-$(command -v llvm-config || true)}
+export PGRX_HOME=${PGRX_HOME:-/root/.pgrx}
+
+init_pgrx() {
+  log_step "Initializing cargo-pgrx for PostgreSQL ${PG_MAJOR}"
+  cargo pgrx init "--pg${PG_MAJOR}=${PG_CONFIG}"
+}
 
 build_pgvector() {
   local dir="${SOURCES_DIR}/pgvector"
@@ -31,38 +37,25 @@ build_vectorchord() {
 
 build_vectorchord_bm25() {
   local dir="${SOURCES_DIR}/vectorchord-bm25"
+  local feature="pg${PG_MAJOR:?PG_MAJOR is required}"
   require_dir "$dir"
 
-  log_step "Building VectorChord-bm25"
-  make -C "$dir" PG_CONFIG="$PG_CONFIG" build
-  make -C "$dir" PG_CONFIG="$PG_CONFIG" install
+  log_step "Building VectorChord-bm25 with cargo-pgrx"
+  cd "$dir"
+  cargo pgrx install --release --features "$feature" --pg-config "$PG_CONFIG"
 }
 
 build_pg_tokenizer() {
   local dir="${SOURCES_DIR}/pg_tokenizer.rs"
-  local version="${PG_TOKENIZER_VERSION:?PG_TOKENIZER_VERSION is required}"
   local feature="pg${PG_MAJOR:?PG_MAJOR is required}"
-  local pkglibdir
-  local extension_dir
   require_dir "$dir"
 
-  log_step "Building pg_tokenizer.rs"
-  pkglibdir=$("$PG_CONFIG" --pkglibdir)
-  extension_dir="$("$PG_CONFIG" --sharedir)/extension"
-
+  log_step "Building pg_tokenizer.rs with cargo-pgrx"
   cd "$dir"
-  cargo build --lib --features "$feature" --release
-
-  install -d "$pkglibdir" "$extension_dir"
-  install -m 755 target/release/libpg_tokenizer.so "${pkglibdir}/pg_tokenizer.so"
-  sed -e "s/@CARGO_VERSION@/${version}/g" < pg_tokenizer.control > "${extension_dir}/pg_tokenizer.control"
-  install -m 644 "sql/install/pg_tokenizer--${version}.sql" "${extension_dir}/pg_tokenizer--${version}.sql"
-
-  if [[ -d sql/upgrade ]]; then
-    install -m 644 sql/upgrade/pg_tokenizer--*.sql "$extension_dir/"
-  fi
+  cargo pgrx install --release --features "$feature" --pg-config "$PG_CONFIG"
 }
 
+init_pgrx
 build_pgvector
 build_vectorchord
 build_vectorchord_bm25

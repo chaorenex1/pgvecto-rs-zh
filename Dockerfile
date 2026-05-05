@@ -135,6 +135,8 @@ RUN chmod +x docker/build-scripts/*.sh \
     && set -a \
     && . docker/versions.env \
     && set +a \
+    && curl --fail --location --silent --show-error "https://github.com/tensorchord/pgrx/releases/download/v${PGRX_VERSION}/cargo-pgrx-v${PGRX_VERSION}-$(uname -m)-unknown-linux-gnu.tar.gz" \
+      | tar -xOzf - ./cargo-pgrx | install -m 755 /dev/stdin /usr/local/bin/cargo-pgrx \
     && docker/build-scripts/build-core-extensions.sh /workspace/sources \
     && docker/build-scripts/build-heavy-extensions.sh /workspace/sources \
     && docker/build-scripts/build-vector-stack.sh /workspace/sources
