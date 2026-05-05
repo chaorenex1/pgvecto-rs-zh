@@ -1,4 +1,22 @@
 CREATE EXTENSION IF NOT EXISTS pg_cron;
+CREATE EXTENSION IF NOT EXISTS age;
+
+BEGIN;
+LOAD 'age';
+
+DO $block$
+BEGIN
+  IF NOT EXISTS (
+      SELECT 1
+      FROM ag_catalog.ag_graph
+      WHERE name = 'sample_graph'
+  ) THEN
+      PERFORM ag_catalog.create_graph('sample_graph');
+  END IF;
+END;
+$block$;
+
+COMMIT;
 
 -- Seed template1 so the app database cloned from it inherits the extension stack.
 \connect template1
@@ -59,20 +77,3 @@ BEGIN
     );
 END;
 $$ LANGUAGE plpgsql;
-
-BEGIN;
-LOAD 'age';
-
-DO $block$
-BEGIN
-  IF NOT EXISTS (
-      SELECT 1
-      FROM ag_catalog.ag_graph
-      WHERE name = 'sample_graph'
-  ) THEN
-      PERFORM ag_catalog.create_graph('sample_graph');
-  END IF;
-END;
-$block$;
-
-COMMIT;
