@@ -3,14 +3,17 @@ CREATE EXTENSION IF NOT EXISTS pg_cron;
 -- Seed template1 so the app database cloned from it inherits the extension stack.
 \connect template1
 
--- SET search_path = ag_catalog, "$user", public;
+-- 把 search_path 固定为 public，避免落到别的 schema
+ALTER DATABASE template1 SET search_path = public;
+
+SET LOCAL search_path = public;
 
 CREATE SCHEMA IF NOT EXISTS public;
 
 CREATE EXTENSION IF NOT EXISTS vector WITH SCHEMA public;
 CREATE EXTENSION IF NOT EXISTS vchord WITH SCHEMA public;
 CREATE EXTENSION IF NOT EXISTS pg_jieba WITH SCHEMA public;
-CREATE EXTENSION IF NOT EXISTS age WITH SCHEMA ag_catalog;
+CREATE EXTENSION IF NOT EXISTS age;
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp" WITH SCHEMA public;
 CREATE EXTENSION IF NOT EXISTS pgcrypto WITH SCHEMA public;
 CREATE EXTENSION IF NOT EXISTS hstore;
@@ -25,8 +28,8 @@ CREATE EXTENSION IF NOT EXISTS pg_repack;
 CREATE EXTENSION IF NOT EXISTS pgroonga;
 CREATE SCHEMA IF NOT EXISTS partman;
 CREATE EXTENSION IF NOT EXISTS pg_partman WITH SCHEMA partman;
-CREATE EXTENSION IF NOT EXISTS pg_tokenizer WITH SCHEMA tokenizer_catalog;
-CREATE EXTENSION IF NOT EXISTS vchord_bm25 WITH SCHEMA bm25_catalog;
+CREATE EXTENSION IF NOT EXISTS pg_tokenizer;
+CREATE EXTENSION IF NOT EXISTS vchord_bm25;
 
 DROP TEXT SEARCH CONFIGURATION IF EXISTS public.jieba_cfg;
 CREATE TEXT SEARCH CONFIGURATION public.jieba_cfg (PARSER = jieba);
