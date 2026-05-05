@@ -1,7 +1,6 @@
 \connect template1
 
 CREATE SCHEMA IF NOT EXISTS public;
-SET search_path = public;
 
 CREATE EXTENSION IF NOT EXISTS pg_tokenizer CASCADE;
 CREATE EXTENSION IF NOT EXISTS vchord_bm25 CASCADE;
@@ -56,7 +55,6 @@ $$ LANGUAGE plpgsql;
 
 BEGIN;
 LOAD 'age';
-SET LOCAL search_path = ag_catalog, "$user", public;
 
 DO $block$
 BEGIN
